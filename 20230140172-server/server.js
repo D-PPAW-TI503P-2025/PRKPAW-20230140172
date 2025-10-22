@@ -1,41 +1,37 @@
 // server.js
-
-const express = require('express');
-const cors = require('cors');
-const bookRoutes = require('./routes/books'); // Impor rute buku
-
+const express = require("express");
+const cors = require("cors");
 const app = express();
 const PORT = 3001;
+const morgan = require("morgan"); // Middleware logging
 
-// Middleware Bawaan
-app.use(cors());
-app.use(express.json()); // Body parser untuk JSON
+// Impor router
+const ruteBuku = require("./routes/books"); // Router dari pertemuan sebelumnya
+const presensiRoutes = require("./routes/presensi"); // Router baru
+const reportRoutes = require("./routes/reports");   // Router baru
 
-// 1. Logging Middleware (Sesuai permintaan tugas)
+// Middleware Global
+app.use(cors()); // Mengizinkan request dari origin berbeda
+app.use(express.json()); // Mem-parsing body request JSON
+app.use(morgan("dev")); // Logging request ke console (format 'dev')
+
+// Middleware logging custom (opsional, contoh dari modul)
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next(); // Lanjutkan ke middleware atau route handler berikutnya
+  next(); // Lanjutkan ke middleware/route selanjutnya
 });
 
-// Routes
-app.get('/', (req, res) => {
-  res.send('Home Page for Library API');
+// Rute Dasar
+app.get("/", (req, res) => {
+  res.send("Home Page for API presensi dan buku");
 });
 
-// Menggunakan API router untuk buku
-app.use('/api/books', bookRoutes);
+// Gunakan Router
+app.use("/api/books", ruteBuku); // Rute untuk buku
+app.use("/api/presensi", presensiRoutes); // Rute untuk presensi
+app.use("/api/reports", reportRoutes);   // Rute untuk reports
 
-// 2. 404 Not Found Handler (Middleware untuk menangani route yang tidak ditemukan)
-app.use((req, res, next) => {
-  res.status(404).json({ message: 'Resource not found' });
-});
-
-// 3. Global Error Handler (Middleware untuk menangani error internal server)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong on the server!' });
-});
-
+// Jalankan Server
 app.listen(PORT, () => {
-  console.log(`Express server running at http://localhost:${PORT}/`);
+  console.log(`Server berjalan di http://localhost:${PORT}`);
 });
