@@ -1,59 +1,89 @@
-// controllers/presensiController.js
-const presensiData = require('../data/presensiData'); // Impor data manager
-
-exports.CheckIn = (req, res) => {
-  const { userId } = req.userData;
-  const now = new Date();
-
-  // Cek apakah user sudah check-in hari ini menggunakan findPresensi
-  const todayCheckIn = presensiData.findPresensi(p =>
-    p.userId === userId &&
-    p.checkIn &&
-    new Date(p.checkIn).toDateString() === now.toDateString()
-  );
-
-  if (todayCheckIn) {
-    return res.status(400).json({ message: 'Anda sudah melakukan check-in hari ini.' });
-  }
-
-  // Gunakan addPresensi untuk menambahkan data baru
-  const newPresensi = presensiData.addPresensi({
-    userId: userId,
-    checkIn: now,
-    checkOut: null,
-  });
-
-  res.status(201).json({ message: 'Check-in berhasil', data: newPresensi });
-};
-
-exports.CheckOut = (req, res) => {
-  const { userId } = req.userData;
-  const now = new Date();
-
-  // Cari data check-in user hari ini yang belum checkout
-  const checkInData = presensiData.findPresensi(p =>
-    p.userId === userId &&
-    p.checkIn &&
-    !p.checkOut &&
-    new Date(p.checkIn).toDateString() === now.toDateString()
-  );
-
-  if (!checkInData) {
-    return res.status(400).json({ message: 'Anda belum melakukan check-in hari ini atau sudah check-out.' });
-  }
-
-  // Gunakan updatePresensi untuk mengisi waktu checkOut
-  const updatedPresensi = presensiData.updatePresensi(checkInData.id, { checkOut: now });
-
-  if (!updatedPresensi) {
-     // Seharusnya tidak terjadi jika checkInData ditemukan, tapi sebagai pengaman
-     return res.status(500).json({ message: 'Gagal memperbarui data check-out.' });
-  }
-
-  res.status(200).json({ message: 'Check-out berhasil', data: updatedPresensi });
-};
-
-// Fungsi getAllPresensi sekarang hanya memanggil dari presensiData
-exports.getAllPresensi = () => {
-  return presensiData.getAllPresensi();
-};
+// 1. Ganti sumber data dari array ke model Sequelize
+ 	const { Presensi } = require("../models");
+ 	const { format } = require("date-fns-tz");
+ 	const timeZone = "Asia/Jakarta";
+ 	
+ 	exports.CheckIn = async (req, res) => {
+ 	  // 2. Gunakan try...catch untuk error handling
+ 	  try {
+ 	    const { id: userId, nama: userName } = req.user;
+ 	    const waktuSekarang = new Date();
+ 	
+ 	    // 3. Ubah cara mencari data menggunakan 'findOne' dari Sequelize
+ 	    const existingRecord = await Presensi.findOne({
+ 	      where: { userId: userId, checkOut: null },
+ 	    });
+ 	
+ 	    if (existingRecord) {
+ 	      return res
+ 	        .status(400)
+ 	        .json({ message: "Anda sudah melakukan check-in hari ini." });
+ 	    }
+ 	
+ 	    // 4. Ubah cara membuat data baru menggunakan 'create' dari Sequelize
+ 	    const newRecord = await Presensi.create({
+ 	      userId: userId,
+ 	      nama: userName,
+ 	      checkIn: waktuSekarang,
+ 	    });
+ 	    
+ 	    const formattedData = {
+ 	        userId: newRecord.userId,
+ 	        nama: newRecord.nama,
+ 	        checkIn: format(newRecord.checkIn, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
+ 	        checkOut: null
+ 	    };
+ 	
+ 	    res.status(201).json({
+ 	      message: `Halo ${userName}, check-in Anda berhasil pada pukul ${format(
+ 	        waktuSekarang,
+ 	        "HH:mm:ss",
+ 	        { timeZone }
+ 	      )} WIB`,
+ 	      data: formattedData,
+ 	    });
+ 	  } catch (error) {
+ 	    res.status(500).json({ message: "Terjadi kesalahan pada server", error: error.message });
+ 	  }
+ 	};
+ 	
+ 	exports.CheckOut = async (req, res) => {
+ 	  // Gunakan try...catch
+ 	  try {
+ 	    const { id: userId, nama: userName } = req.user;
+ 	    const waktuSekarang = new Date();
+ 	
+ 	    // Cari data di database
+ 	    const recordToUpdate = await Presensi.findOne({
+ 	      where: { userId: userId, checkOut: null },
+ 	    });
+ 	
+ 	    if (!recordToUpdate) {
+ 	      return res.status(404).json({
+ 	        message: "Tidak ditemukan catatan check-in yang aktif untuk Anda.",
+ 	      });
+ 	    }
+ 	
+ 	    // 5. Update dan simpan perubahan ke database
+ 	    recordToUpdate.checkOut = waktuSekarang;
+ 	    await recordToUpdate.save();
+ 	
+ 	    const formattedData = {
+ 	        userId: recordToUpdate.userId,
+ 	        nama: recordToUpdate.nama,
+ 	        checkIn: format(recordToUpdate.checkIn, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
+ 	        checkOut: format(recordToUpdate.checkOut, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
+ 	    };
+ 	
+ 	    res.json({
+ 	      message: `Selamat jalan ${userName}, check-out Anda berhasil pada pukul ${format(
+ 	        waktuSekarang,
+ 	        "HH:mm:ss",
+ 	        { timeZone }
+ 	      )} WIB`,
+ 	      data: formattedData,
+ 	    });
+ 	  } catch (error) {
+ 	    res.status(500).json({ message: "Terjadi kesalahan pada server", error: error.message });
+ 	  }
+ 	};

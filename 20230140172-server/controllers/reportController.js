@@ -1,18 +1,40 @@
-// controllers/reportController.js
-const { getAllPresensi } = require('./presensiController'); // Impor fungsi yang sudah diperbarui
+// 1. Ganti sumber data dari array ke model Sequelize
+const { Presensi } = require("../models");
+const { format } = require("date-fns-tz");
+const timeZone = "Asia/Jakarta";
 
-exports.getDailyReport = (req, res) => {
-  const allPresensi = getAllPresensi(); // Ini sekarang mengambil dari presensiData.js via presensiController
-  const today = new Date().toDateString();
+exports.getDailyReport = async (req, res) => { // 2. Tambahkan async
+  console.log("Controller: Mengambil data laporan harian dari database...");
 
-  // Filter presensi untuk hari ini
-  const dailyReport = allPresensi.filter(p =>
-    p.checkIn && new Date(p.checkIn).toDateString() === today
-  );
+  // 3. Gunakan try...catch untuk error handling
+  try {
+    // 4. Ganti cara mengambil data menggunakan 'findAll' dari Sequelize
+    //    Kita urutkan berdasarkan checkIn terbaru (DESC)
+    const allRecords = await Presensi.findAll({
+      order: [["checkIn", "DESC"]],
+    });
 
-  if (dailyReport.length === 0) {
-    return res.status(404).json({ message: 'Belum ada data presensi untuk hari ini.' });
+    // 5. (Opsional tapi disarankan) Format data agar konsisten
+    const formattedData = allRecords.map((record) => ({
+      userId: record.userId,
+      nama: record.nama,
+      checkIn: record.checkIn
+        ? format(record.checkIn, "yyyy-MM-dd HH:mm:ssXXX", { timeZone })
+        : null,
+      checkOut: record.checkOut
+        ? format(record.checkOut, "yyyy-MM-dd HH:mm:ssXXX", { timeZone })
+        : null,
+    }));
+
+    res.json({
+      reportDate: format(new Date(), "yyyy-MM-dd", { timeZone }), // Format tanggal laporan
+      data: formattedData, // Kirim data yang sudah diformat
+    });
+    
+  } catch (error) {
+    // 6. Tambahkan error handling
+    res
+      .status(500)
+      .json({ message: "Terjadi kesalahan pada server", error: error.message });
   }
-
-  res.status(200).json({ message: 'Laporan harian berhasil diambil', data: dailyReport });
 };
