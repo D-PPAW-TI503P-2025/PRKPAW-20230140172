@@ -9,11 +9,13 @@ const morgan = require("morgan"); // Middleware logging
 const ruteBuku = require("./routes/books"); // Router dari pertemuan sebelumnya
 const presensiRoutes = require("./routes/presensi"); // Router baru
 const reportRoutes = require("./routes/reports");   // Router baru
+const authRoutes = require('./routes/auth');
 
 // Middleware Global
 app.use(cors()); // Mengizinkan request dari origin berbeda
 app.use(express.json()); // Mem-parsing body request JSON
 app.use(morgan("dev")); // Logging request ke console (format 'dev')
+app.use('/api/auth', authRoutes);
 
 // Middleware logging custom (opsional, contoh dari modul)
 app.use((req, res, next) => {
