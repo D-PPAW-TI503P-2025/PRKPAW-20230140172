@@ -1,16 +1,12 @@
-// routes/presensi.js
 const express = require('express');
 const router = express.Router();
 const presensiController = require('../controllers/presensiController');
-const { addUserData } = require('../middleware/permissionMiddleware'); // Impor middleware
+// Ganti addUserData dengan authenticateToken
+const { authenticateToken } = require('../middleware/permissionMiddleware');
 
-// Terapkan middleware addUserData ke semua rute di bawah ini
-router.use(addUserData);
+router.use(authenticateToken); // Semua route di bawah ini butuh login
 
 router.post('/check-in', presensiController.CheckIn);
 router.post('/check-out', presensiController.CheckOut);
-
-router.delete("/:id", presensiController.deletePresensi);
-router.put("/:id", presensiController.updatePresensi);
 
 module.exports = router;

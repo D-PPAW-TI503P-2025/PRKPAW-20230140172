@@ -1,46 +1,47 @@
-// controllers/reportController.js
+const { Presensi, User } = require('../models');
+const { Op } = require('sequelize');
+const { startOfDay, endOfDay } = require('date-fns');
 
-// 1. Impor Model Presensi dan Operator Sequelize
-const { Presensi } = require("../models");
-const { Op } = require("sequelize");
-
-
-// 2. Implementasi getDailyReport dengan filter Nama dan Rentang Tanggal
 exports.getDailyReport = async (req, res) => {
+  const now = new Date();
+  const todayStart = startOfDay(now);
+  const todayEnd = endOfDay(now);
+
+  // Ambil parameter pencarian nama dari URL (optional)
+  const searchName = req.query.nama || "";
+
   try {
-    // Ambil query parameters: nama, tanggalMulai, dan tanggalSelesai [cite: 110, 131]
-    const { nama, tanggalMulai, tanggalSelesai } = req.query;
-    let options = { where: {} };
-
-    // Filter berdasarkan Nama (jika ada) [cite: 112]
-    if (nama) {
-      options.where.nama = {
-        [Op.like]: `%${nama}%`, // Mencari nama yang mengandung string tertentu [cite: 114]
-      };
-    }
-
-    // Filter berdasarkan Rentang Tanggal (Tugas Modul) 
-    if (tanggalMulai && tanggalSelesai) {
-      // Asumsi memfilter berdasarkan waktu dibuatnya record ('createdAt').
-      // Perlu dipastikan format tanggal yang dikirim dari query parameters
-      // sudah sesuai dengan format database.
-      options.where.createdAt = {
-        [Op.between]: [tanggalMulai, tanggalSelesai], // Menggunakan [Op.between] untuk rentang tanggal 
-      };
-    }
-
-    // Lakukan query ke database
-    const records = await Presensi.findAll(options); // Mengambil semua data dengan opsi filter [cite: 117]
-
-    // Kirimkan respon berhasil
-    res.json({
-      reportDate: new Date().toLocaleDateString(),
-      data: records,
+    const dailyReportData = await Presensi.findAll({
+      where: {
+        checkIn: {
+          [Op.between]: [todayStart, todayEnd],
+        },
+      },
+      // Join dengan tabel User untuk mengambil nama
+      include: [{
+        model: User,
+        as: 'user', // Sesuai alias di models/presensi.js
+        attributes: ['nama'], // Hanya ambil kolom nama
+        where: {
+            nama: {
+                [Op.like]: `%${searchName}%` // Fitur pencarian nama
+            }
+        }
+      }],
+      order: [
+        ['checkIn', 'ASC'],
+      ],
     });
-    } catch (error) {
-    // Kirimkan respon error server
-    res
-      .status(500)
-      .json({ message: "Gagal mengambil laporan", error: error.message });
+
+    if (!dailyReportData || dailyReportData.length === 0) {
+      // Jangan return 404 agar frontend tetap bisa render tabel kosong tanpa error
+      return res.status(200).json({ message: 'Belum ada data presensi.', data: [] });
+    }
+
+    res.status(200).json({ message: 'Laporan harian berhasil diambil', data: dailyReportData });
+
+  } catch (error) {
+    console.error("Error Daily Report:", error);
+    res.status(500).json({ message: "Terjadi kesalahan pada server", error: error.message });
   }
 };
