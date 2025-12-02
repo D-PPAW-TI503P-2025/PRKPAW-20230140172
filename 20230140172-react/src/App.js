@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
+import 'leaflet/dist/leaflet.css'; // <--- WAJIB ADA!
 // Import komponen
 import Navbar from './components/Navbar'; 
 import LoginPage from './components/LoginPage';

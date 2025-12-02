@@ -19,14 +19,12 @@ function ReportPage() {
         headers: { Authorization: `Bearer ${token}` },
       };
       
-      // Endpoint Report Daily + Query Search
       const url = query 
         ? `http://localhost:3001/api/reports/daily?nama=${query}` 
         : "http://localhost:3001/api/reports/daily";
 
       const response = await axios.get(url, config);
       
-      // Simpan data ke state
       setReports(response.data.data || []); 
       setError(null);
     } catch (err) {
@@ -45,6 +43,11 @@ function ReportPage() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchReports(searchTerm);
+  };
+
+  // Fungsi helper untuk link Google Maps
+  const getMapLink = (lat, lng) => {
+    return `https://www.google.com/maps?q=${lat},${lng}`;
   };
 
   return (
@@ -76,6 +79,9 @@ function ReportPage() {
                 <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Nama</th>
                 <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Check-In</th>
                 <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Check-Out</th>
+                {/* Header Dipisah */}
+                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Latitude</th>
+                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Longitude</th>
               </tr>
             </thead>
             <tbody>
@@ -93,11 +99,42 @@ function ReportPage() {
                         ? new Date(presensi.checkOut).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
                         : "Belum Check-Out"}
                     </td>
+                    
+                    {/* Kolom Latitude Sendiri */}
+                    <td style={{ padding: '1rem 1.5rem', color: '#6b7280', fontSize: '0.85rem' }}>
+                      {presensi.latitude ? (
+                        <a 
+                          href={getMapLink(presensi.latitude, presensi.longitude)} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          style={{ color: '#2563eb', textDecoration: 'underline' }}
+                          title="Lihat di Google Maps"
+                        >
+                          {presensi.latitude}
+                        </a>
+                      ) : "-"}
+                    </td>
+
+                    {/* Kolom Longitude Sendiri */}
+                    <td style={{ padding: '1rem 1.5rem', color: '#6b7280', fontSize: '0.85rem' }}>
+                      {presensi.longitude ? (
+                        <a 
+                          href={getMapLink(presensi.latitude, presensi.longitude)} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          style={{ color: '#2563eb', textDecoration: 'underline' }}
+                          title="Lihat di Google Maps"
+                        >
+                          {presensi.longitude}
+                        </a>
+                      ) : "-"}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>
+                  {/* Update colSpan jadi 5 karena kolom bertambah */}
+                  <td colSpan="5" style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>
                     Tidak ada data ditemukan.
                   </td>
                 </tr>

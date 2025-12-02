@@ -7,6 +7,7 @@ exports.CheckIn = async (req, res) => {
     // Ambil userId dari token (bukan dari body)
     const userId = req.user.id; 
     const now = new Date();
+    const { latitude, longitude } = req.body; 
 
     const todayStart = startOfDay(now);
     const todayEnd = endOfDay(now);
@@ -29,7 +30,10 @@ exports.CheckIn = async (req, res) => {
     const newPresensi = await Presensi.create({
       userId: userId,
       checkIn: now,
+      latitude: latitude, // <-- Simpan ke database
+      longitude: longitude, 
       checkOut: null,
+      
     });
 
     res.status(201).json({

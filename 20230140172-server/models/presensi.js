@@ -18,6 +18,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: false
     },
+    latitude: {
+        type: DataTypes.DECIMAL(10, 7),
+        allowNull: false,
+    },
+      longitude: {
+        type: DataTypes.DECIMAL(10, 7),
+        allowNull: false,
+      },
     checkOut: {
       type: DataTypes.DATE,
       allowNull: true

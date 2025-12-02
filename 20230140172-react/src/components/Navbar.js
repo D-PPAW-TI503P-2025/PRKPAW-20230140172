@@ -21,8 +21,9 @@ function Navbar() {
   };
 
   return (
-    <nav style={{ background: '#2563eb', padding: '1rem', color: 'white', marginBottom: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto' }}>
+// Hapus atau set marginBottom jadi 0
+  <nav style={{ background: '#2563eb', padding: '1rem', color: 'white', marginBottom: '0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto' }}>
         <h1 style={{ margin: 0, fontSize: '1.5rem' }}>App Presensi</h1>
         <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
           {user ? (
