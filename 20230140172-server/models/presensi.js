@@ -29,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
     checkOut: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    buktiFoto: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   }, {
     sequelize,

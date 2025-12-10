@@ -1,6 +1,7 @@
 // server.js
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const app = express();
 const PORT = 3001;
 const morgan = require("morgan"); // Middleware logging
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 });
 
 // Gunakan Router
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/books", ruteBuku); // Rute untuk buku
 app.use("/api/presensi", presensiRoutes); // Rute untuk presensi
 app.use("/api/reports", reportRoutes);   // Rute untuk reports

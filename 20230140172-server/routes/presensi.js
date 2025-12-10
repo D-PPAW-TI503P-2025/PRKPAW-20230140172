@@ -6,7 +6,7 @@ const { authenticateToken } = require('../middleware/permissionMiddleware');
 
 router.use(authenticateToken); // Semua route di bawah ini butuh login
 
-router.post('/check-in', presensiController.CheckIn);
+router.post('/check-in', presensiController.upload.single('image'), presensiController.CheckIn);
 router.post('/check-out', presensiController.CheckOut);
 
 module.exports = router;
